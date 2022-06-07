@@ -10,11 +10,12 @@ const LoadingSpinner = () => {
 	)
 }
 
-const Formfield = ({ formName, label, placeholder, value, type="text", onChange }) => {
+const Formfield = ({ formName, label, placeholder, value, type="text", onChange, isError, errorMessage }) => {
 	return (
 		<div className="formfield">
 			<label htmlFor={formName} className="formfield--label">{label}</label>
-			<input type={type} name={formName} id={formName} placeholder={placeholder} value={value} className="formfield--input" onChange={onChange}/>
+			<input type={type} name={formName} id={formName} placeholder={placeholder} value={value} className={`formfield--input${isError ? ' error' : ''}`} onChange={onChange} aria-describedby={`error-${formName}`} />
+			{isError && <span id={`error-${formName}`} className="formfield--error-message">{errorMessage}</span>}
 		</div>
 	)
 }
@@ -25,51 +26,71 @@ const App = () => {
 			label: "Name: ",
 			value: "",
 			placeholder: "John Smith",
+			errorMessage: "Required",
+			isError: false,
 		},
 		company: {
 			label: "Company: ",
 			value: "",
 			placeholder: "EasyPost",
+			errorMessage: "Required",
+			isError: false,
 		},
 		street1: {
 			label: "Street 1: ",
 			value: "",
 			placeholder: "417 MONTGOMERY ST",
+			errorMessage: "Required",
+			isError: false,
 		},
     street2: {
 			label: "Street 2: ",
 			value: "",
 			placeholder: "FLOOR 5",
+			errorMessage: "Required",
+			isError: false,
 		},
     city: {
 			label: "City: ",
 			value: "",
 			placeholder: "SAN FRANCISCO",
+			errorMessage: "Required",
+			isError: false,
 		},
     state: {
 			label: "State: ",
 			value: "",
 			placeholder: "CA",
+			errorMessage: "Required",
+			isError: false,
 		},
     zip: {
 			label: "ZIP: ",
 			value: "",
 			placeholder: "94104",
+			errorMessage: "Required",
+			isError: false,
 		},
     country: {
 			label: "Country: ",
 			value: "",
 			placeholder: "US",
+			errorMessage: "Required",
+			isError: false,
 		},
     phone: {
 			label: "Phone: ",
 			value: "",
 			placeholder: "4151234567",
+			errorMessage: "Required",
+			isError: false,
 		},
 		email: {
 			label: "Email Address: ",
 			value: "",
 			placeholder: "johnsmith@easypost.com",
+			errorMessage: "Required",
+			isError: false,
 		},
 	});
 	const [toAddressForm, setToAddressForm] = React.useState({
@@ -77,51 +98,71 @@ const App = () => {
 			label: "Name: ",
 			value: "",
 			placeholder: "Jane Smith",
+			errorMessage: "Required",
+			isError: false,
 		},
 		company: {
 			label: "Company: ",
 			value: "",
 			placeholder: "Roofstock",
+			errorMessage: "Required",
+			isError: false,
 		},
 		street1: {
 			label: "Street 1: ",
 			value: "",
 			placeholder: "179 N Harbor Dr",
+			errorMessage: "Required",
+			isError: false,
 		},
     street2: {
 			label: "Street 2: ",
 			value: "",
 			placeholder: "Apt 3",
+			errorMessage: "Required",
+			isError: false,
 		},
     city: {
 			label: "City: ",
 			value: "",
 			placeholder: "Redondo Beach",
+			errorMessage: "Required",
+			isError: false,
 		},
     state: {
 			label: "State: ",
 			value: "",
 			placeholder: "CA",
+			errorMessage: "Required",
+			isError: false,
 		},
     zip: {
 			label: "ZIP: ",
 			value: "",
 			placeholder: "90277",
+			errorMessage: "Required",
+			isError: false,
 		},
     country: {
 			label: "Country: ",
 			value: "",
 			placeholder: "US",
+			errorMessage: "Required",
+			isError: false,
 		},
     phone: {
 			label: "Phone: ",
 			value: "",
 			placeholder: "4155559999",
+			errorMessage: "Required",
+			isError: false,
 		},
 		email: {
 			label: "Email Address: ",
 			value: "",
 			placeholder: "janesmith@roofstock.com",
+			errorMessage: "Required",
+			isError: false,
 		},
 	});
 	const [parcelForm, setParcelForm] = React.useState({
@@ -129,21 +170,29 @@ const App = () => {
 			label: "Length (in inches): ",
 			value: 0,
 			placeholder: 8,
+			errorMessage: "Must be greater than 0",
+			isError: false,
 		},
     width: {
 			label: "Width (in inches): ",
 			value: 0,
 			placeholder: 5,
+			errorMessage: "Must be greater than 0",
+			isError: false,
 		},
     height: {
 			label: "Height (in inches): ",
 			value: 0,
 			placeholder: 5,
+			errorMessage: "Must be greater than 0",
+			isError: false,
 		},
     weight: {
-			label: "Weight (in lbs): ",
+			label: "Weight (in ounces): ",
 			value: 0,
 			placeholder: 5,
+			errorMessage: "Must be greater than 0",
+			isError: false,
 		},
 	});
 	const [labelUrl, setLabelUrl] = React.useState("");
@@ -153,22 +202,61 @@ const App = () => {
 	const labelSectionRef = useRef(null)
 
 	useEffect(() => {
-		isLoading && handleGetRate()
+		isLoading && handleValidate()
 	}, [isLoading])
+
+	// useEffect(() => {
+	// 	if (
+	// 		Object.values(fromAddressForm).some(field => field.isError) &&
+	// 		Object.values(toAddressForm).some(field => field.isError) &&
+	// 		Object.values(parcelForm).some(field => field.isError)
+	// 	) {
+	// 		handleValidate()
+	// 	}
+	// }, [fromAddressForm, toAddressForm, parcelForm])
 
 	useEffect(() => {
 		trackingNumber && handleScroll()
 	}, [trackingNumber])
 
-	const handleUpdateFormfield = (event, setStateFn, fieldName) => {
+	const handleUpdateFormfieldValue = (event, setStateFn, fieldName, validation) => {
 		const { value } = event.target
 		setStateFn(prevState => ({
 			...prevState,
 			[fieldName]: {
 				...prevState[fieldName],
-				value: value
+				value: value,
+				isError: validation
 			}
 		}))
+	}
+
+	const handleUpdateFormfieldIsError = (value, setStateFn, fieldName) => {
+		setStateFn(prevState => ({
+			...prevState,
+			[fieldName]: {
+				...prevState[fieldName],
+				isError: value
+			}
+		}))
+	}
+
+	const handleValidate = () => {
+		if (
+			Object.values(fromAddressForm).every(field => field.value.trim() !== "") &&
+			Object.values(toAddressForm).every(field => field.value.trim() !== "") &&
+			Object.values(parcelForm).every(field => field.value > 0)
+		) {
+			handleGetRate()
+		} else {
+			setIsLoading(false)
+
+			Object.keys(fromAddressForm).forEach(fieldName => handleUpdateFormfieldIsError(fromAddressForm[fieldName].value.trim() === "", setFromAddressForm, fieldName))
+			
+			Object.keys(toAddressForm).forEach(fieldName => handleUpdateFormfieldIsError(toAddressForm[fieldName].value.trim() === "", setToAddressForm, fieldName))
+			
+			Object.keys(parcelForm).forEach(fieldName => handleUpdateFormfieldIsError(parcelForm[fieldName].value <= 0, setParcelForm, fieldName))
+		}
 	}
 
 	const handleGetRate = async () => {
@@ -212,7 +300,8 @@ const App = () => {
 			const filled = {}
 			Object.keys(prevState).forEach(fieldName => filled[fieldName] = {
 				...prevState[fieldName],
-				value: prevState[fieldName].placeholder
+				value: prevState[fieldName].placeholder,
+				isError: false,
 			})
 			return filled
 		}
@@ -240,7 +329,9 @@ const App = () => {
 							label={fromAddressForm[fieldName].label}
 							placeholder={fromAddressForm[fieldName].placeholder}
 							value={fromAddressForm[fieldName].value}
-							onChange={e => handleUpdateFormfield(e, setFromAddressForm, fieldName)}
+							onChange={e => handleUpdateFormfieldValue(e, setFromAddressForm, fieldName, e.target.value.trim() === "")}
+							isError={fromAddressForm[fieldName].isError}
+							errorMessage={fromAddressForm[fieldName].errorMessage}
 						/>
 					))}
 				</form>
@@ -254,7 +345,9 @@ const App = () => {
 							label={toAddressForm[fieldName].label}
 							placeholder={toAddressForm[fieldName].placeholder}
 							value={toAddressForm[fieldName].value}
-							onChange={e => handleUpdateFormfield(e, setToAddressForm, fieldName)}
+							onChange={e => handleUpdateFormfieldValue(e, setToAddressForm, fieldName, e.target.value.trim() === "")}
+							isError={toAddressForm[fieldName].isError}
+							errorMessage={toAddressForm[fieldName].errorMessage}
 						/>
 					))}
 				</form>
@@ -269,8 +362,10 @@ const App = () => {
 							placeholder={parcelForm[fieldName].placeholder}
 							value={parcelForm[fieldName].value}
 							type={"number"}
-							onChange={e => handleUpdateFormfield(e, setParcelForm, fieldName)}
+							onChange={e => handleUpdateFormfieldValue(e, setParcelForm, fieldName, e.target.value <= 0)}
 							unit={parcelForm[fieldName].unit}
+							isError={parcelForm[fieldName].isError}
+							errorMessage={parcelForm[fieldName].errorMessage}
 						/>
 					))}
 				</form>
