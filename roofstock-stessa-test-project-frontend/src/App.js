@@ -205,16 +205,6 @@ const App = () => {
 		isLoading && handleValidate()
 	}, [isLoading])
 
-	// useEffect(() => {
-	// 	if (
-	// 		Object.values(fromAddressForm).some(field => field.isError) &&
-	// 		Object.values(toAddressForm).some(field => field.isError) &&
-	// 		Object.values(parcelForm).some(field => field.isError)
-	// 	) {
-	// 		handleValidate()
-	// 	}
-	// }, [fromAddressForm, toAddressForm, parcelForm])
-
 	useEffect(() => {
 		trackingNumber && handleScroll()
 	}, [trackingNumber])
