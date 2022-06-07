@@ -168,29 +168,29 @@ const App = () => {
 	const [parcelForm, setParcelForm] = React.useState({
 		length: {
 			label: "Length (in inches): ",
-			value: 0,
-			placeholder: 8,
+			value: parseFloat(0).toFixed(1),
+			placeholder: parseFloat(8).toFixed(1),
 			errorMessage: "Must be greater than 0",
 			isError: false,
 		},
     width: {
 			label: "Width (in inches): ",
-			value: 0,
-			placeholder: 5,
+			value: parseFloat(0).toFixed(1),
+			placeholder: parseFloat(5).toFixed(1),
 			errorMessage: "Must be greater than 0",
 			isError: false,
 		},
     height: {
 			label: "Height (in inches): ",
-			value: 0,
-			placeholder: 5,
+			value: parseFloat(0).toFixed(1),
+			placeholder: parseFloat(5).toFixed(1),
 			errorMessage: "Must be greater than 0",
 			isError: false,
 		},
     weight: {
 			label: "Weight (in ounces): ",
-			value: 0,
-			placeholder: 5,
+			value: parseFloat(0).toFixed(1),
+			placeholder: parseFloat(5).toFixed(1),
 			errorMessage: "Must be greater than 0",
 			isError: false,
 		},
@@ -215,7 +215,7 @@ const App = () => {
 			...prevState,
 			[fieldName]: {
 				...prevState[fieldName],
-				value: value,
+				value: !isNaN(Number(value)) ? parseFloat(value).toFixed(1) : value,
 				isError: validation
 			}
 		}))
@@ -276,8 +276,12 @@ const App = () => {
 				body: JSON.stringify(data)
 			})
 			const responseJSON = await response.json();
-			setLabelUrl(responseJSON.labelUrl)
-			setTrackingNumber(responseJSON.trackingNumber)
+			if (responseJSON.labelUrl && responseJSON.trackingNumber) {
+				setLabelUrl(responseJSON.labelUrl)
+				setTrackingNumber(responseJSON.trackingNumber)
+			} else {
+				alert(`${responseJSON.status}: ${Object.values(responseJSON.errors).join(", ")}`)
+			}
 		} catch (err) {
 			alert(err)
 		}
